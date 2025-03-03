@@ -1,6 +1,116 @@
 # WEO
-WEO Naver code
+Youtube
+```
+import Cocoa
+import SwiftUI
+import CEFswift
 
+@main
+class AppDelegate: NSObject, NSApplicationDelegate {
+    var window: NSWindow!
+
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        let cefSettings = CEFSettings()
+        cefSettings.noSandbox = true
+        
+        CEFProcessUtils.initializeMain(args: ProcessInfo.processInfo.arguments, settings: cefSettings)
+        
+        let contentView = ContentView()
+
+        window = NSWindow(
+            contentRect: NSScreen.main!.frame,
+            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+            backing: .buffered,
+            defer: false)
+        window.center()
+        window.title = "CEF.swift Browser"
+        window.contentView = NSHostingView(rootView: contentView)
+        window.makeKeyAndOrderFront(nil)
+        window.setFrame(NSScreen.main!.frame, display: true)
+    }
+
+    func applicationWillTerminate(_ aNotification: Notification) {
+    }
+}
+
+struct ContentView: View {
+    var body: some View {
+        WebView(url: URL(string: "https://www.youtube.com")!)
+            .edgesIgnoringSafeArea(.all)
+    }
+}
+
+struct WebView: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> NSView {
+        return CEFBrowserView(url: url)
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+    }
+}
+
+class CEFBrowserView: NSView, CEFLifeSpanHandler {
+    var browser: CEFBrowser!
+    var client: CEFClient!
+
+    init(url: URL) {
+        super.init(frame: .zero)
+        
+        let windowInfo = CEFWindowInfo()
+        windowInfo.windowName = "CEF Browser"
+        windowInfo.bounds = self.bounds
+
+        let browserSettings = CEFBrowserSettings()
+        browserSettings.windowlessRenderingEnabled = true
+        
+        let client = CEFClient()
+        client.lifeSpanHandler = self
+        self.client = client
+
+        browser = CEFBrowser(windowInfo: windowInfo, url: url.absoluteString, settings: browserSettings, client: client)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layout() {
+        super.layout()
+        browser.host?.wasResized()
+    }
+    
+    func onAfterCreated(browser: CEFBrowser) {
+    }
+
+    func doClose(browser: CEFBrowser) -> CEFOnCloseAction {
+        return .proceed
+    }
+
+    func onBeforeClose(browser: CEFBrowser) {
+    }
+
+    func onBeforePopup(browser: CEFBrowser,
+                       frame: CEFFrame,
+                       targetURL: URL,
+                       targetFrameName: String,
+                       targetDisposition: CEFWindowOpenDisposition,
+                       userGesture: Bool,
+                       popupFeatures: CEFPopupFeatures,
+                       windowInfo: inout CEFWindowInfo,
+                       client: inout CEFClient,
+                       settings: inout CEFBrowserSettings,
+                       jsAccess: inout CEFJavaScriptDialogSettings) -> CEFOnBeforePopupAction {
+        windowInfo.windowName = "CEF Popup"
+        windowInfo.bounds = self.bounds
+        client = CEFClient()
+        client.lifeSpanHandler = self
+        return .allow
+    }
+}
+```
+WEO NAVER
 ```swift
 import SwiftUI
 import WebKit
