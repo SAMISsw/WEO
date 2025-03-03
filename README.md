@@ -1,6 +1,6 @@
 # WEO
 Youtube
-```
+```swift
 import Cocoa
 import SwiftUI
 import CEFswift
